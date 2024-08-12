@@ -44,9 +44,7 @@ recipeRouter.get('/approved', (req, res) => {
 });
 
 recipeRouter.post('/addrecipe/:id', uploadImage.array('images'), (req, res) => {
-    console.log(req.params.id);
     console.log("files", req.files);
-    console.log(req.body.ingredients)
     const recipeDetails = {
         recipename: req.body.recipename,
         ingredients: req.body.ingredients ? (req.body.ingredients.split(',')).map(ingredients => ingredients) : '',
@@ -65,30 +63,32 @@ recipeRouter.post('/addrecipe/:id', uploadImage.array('images'), (req, res) => {
     })
 });
 
-// Add Recipe to home screen
-
-recipeRouter.post('/addrecipetohome', uploadImage.array('images'), (req, res) => {
-    console.log("files", req.files);
-    console.log(req.body.ingredients)
-    const recipeDetails = {
+// Update recipe route
+recipeRouter.put('/updaterecipe/:id', uploadImage.array('images'), (req, res) => {
+    const recipeId = req.params.id;
+    const updatedRecipe = {
         recipename: req.body.recipename,
-        ingredients: req.body.ingredients ? (req.body.ingredients.split(',')).map(ingredients => ingredients) : '',
-
-        // ingredients: req.body.ingredients ? (req.body.ingredients.includes(',') ? req.body.ingredients.split(',').map(ingredient => ingredient.trim()) : [req.body.ingredients.trim()]) : [],
+        ingredients: req.body.ingredients ? req.body.ingredients.split(',').map(ingredient => ingredient.trim()) : [],
         instructions: req.body.instructions,
-        // images: req.files.map(file => file.filename) }
-        images: req.files ? req.files.map((file) => file.filename) : ''
-    }
-    console.log('recipeDetails ---->>', recipeDetails);
+        images: req.files && req.files.length > 0 ? req.files.map(file => file.path) : undefined // Only update images if new ones are uploaded
+    };
 
-    homeRecipeData(recipeDetails).save().then((recipe) => {
-        return res.status(200).json({ success: true, error: false, message: "Recipe added" })
-    }).catch((error) => {
-        return res.status(400).json({ success: false, error: true, data: error })
-    })
-});
+     // Remove undefined fields from the update object
+     Object.keys(updatedRecipe).forEach(key => updatedRecipe[key] === undefined ? delete updatedRecipe[key] : {});
 
+     RecipeData.findByIdAndUpdate(recipeId, updatedRecipe, { new: true })
+         .then(updatedDoc => {
+             if (!updatedDoc) {
+                 return res.status(404).json({ success: false, error: true, message: "Recipe not found" });
+             }
+             return res.status(200).json({ success: true, error: false, message: "Recipe updated successfully", data: updatedDoc });
+         })
+         .catch(error => {
+             return res.status(500).json({ success: false, error: true, message: "Error updating recipe", data: error });
+         });
+ });
 
+ 
 recipeRouter.get('/viewsinglerecipe/:recipeId', (req, res) => {
     const id = req.params.recipeId;
     RecipeData.findOne({ _id: id }).then((recipeDetails) => {
@@ -97,6 +97,7 @@ recipeRouter.get('/viewsinglerecipe/:recipeId', (req, res) => {
         return res.status(400).json({ success: false, error: true, data: error })
     })
 });
+
 
 recipeRouter.post('/approve/:recipeId', (req, res) => {
     const id = req.params.recipeId;
