@@ -1,0 +1,8 @@
+version: 2
+services:
+  - type: web
+    name: my-backend
+    env: node
+    buildCommand: npm install
+    startCommand: node index.js
+    plan: free
