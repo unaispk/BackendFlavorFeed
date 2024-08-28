@@ -14,7 +14,7 @@ userRouter.get('/', (req, res) => {
 
 userRouter.post('/registeruser', async (req, res) => {
     try {
-        const hashedPassword = await bcrypt.hash(request.body.password, 10);
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
         
         // const UserDetails = { firstname: req.body.firstname, lastname: req.body.lastname, email: req.body.email, password: req.body.password, role: "user" }
         const UserDetails = { firstname: req.body.firstname, lastname: req.body.lastname, email: req.body.email, password: hashedPassword, role: "user" }
