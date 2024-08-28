@@ -1,7 +1,7 @@
 const express = require('express');
 const UserData = require('../models/UserModel');
 const userRouter = express.Router();
-
+const bcrypt = require('bcrypt');
 userRouter.use(express.static('./public'));
 
 userRouter.get('/', (req, res) => {
@@ -14,7 +14,10 @@ userRouter.get('/', (req, res) => {
 
 userRouter.post('/registeruser', async (req, res) => {
     try {
-        const UserDetails = { firstname: req.body.firstname, lastname: req.body.lastname, email: req.body.email, password: req.body.password, role: "user" }
+        const hashedPassword = await bcrypt.hash(request.body.password, 10);
+        
+        // const UserDetails = { firstname: req.body.firstname, lastname: req.body.lastname, email: req.body.email, password: req.body.password, role: "user" }
+        const UserDetails = { firstname: req.body.firstname, lastname: req.body.lastname, email: req.body.email, password: hashedPassword, role: "user" }
         const oldUser = await UserData.findOne({ email: req.body.email })
         if (oldUser) {
             return res.status(400).json({ success: false, error: true, message: "User Exists" })
